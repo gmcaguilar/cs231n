@@ -1,0 +1,195 @@
+---------------------------
+--- History of ConvNets ---
+---------------------------
+
+- Mark I Perceptron by Frank Rosenbla, 1957
+
+- Adaline/Madaline by Widorow and Hoff, 1960
+
+- First time *backprop* was introduced: Rumelhart, 1986
+
+- Reinvigorated research in Deep Learning by Hinton and Salakhutdinov, 2006
+
+- First strong results using neural networks: Acousting Modeling using Deep Belief
+Networks Mohamed, Dahl, Hinton, 2010, Imagenet classification with deep convolutional 
+neural networks, Krizhevsky, Sutskever, Hinton, 2012
+
+Important conclusions from these studies:
+
+1. Topographical mapping in the cortex
+
+2. Hierarchical organization
+
+Fast-forward to today: ConvNets are everywhere
+
+-----------------------------
+--- Fully Connected Layer ---
+-----------------------------
+
+32x32x3 image -> stretch to 3071x1
+
+input -> weights -> activation
+
+---------------------------
+--- Convolutional Layer ---
+---------------------------
+
+- convolve(slide) filter(W) over all spatial locations of image and get the
+dot product at that point
+
+e.g. 32x32x3 with 5x5x3 filter
+
+- start at the upper left-hand corner 
+
+- we will get an *activation map* which are the values for 
+each poinnt
+
+- want multiple filters in conv nets
+
+- hierarchy of filters stacked together where
+
+a. top layers are low-level features
+
+b. mid-level features
+
+c. high-level features
+
+d. linearly separable classifier
+
+- ConvNet is a sequence of Convolutional Layers, interspersed with 
+activation functions
+
+- we call the layer convolutional because it is related to convolution of
+two signals
+
+- input image -> conv -> relu -> conv -> relu -> pool -> conv -> relu -> pool ->
+fully-connected layer
+
+- 7x7 input (spatially) with 3x3 filter produces a *five by five* output because
+filter was moved 5 times with a stride of 1
+
+- with a stride of 2, it will be a 3x3 output
+
+- with a stride of 3, *it doesnt fit*
+
+Output size formula: (N - F)/stride + 1
+
+In practice: common to zero pad the border to be able to maintain our full-size output
+(same as input)
+
+- going back to the example of 7x7 input, adding a zero padding gives us 
+a new N = 9 instead of 7
+
+- common to see filter sizes of 3x3, 5x5, 7x7
+
+- In general, common to see CONV layers with "stride 1", "filters of size FxF", and 
+"zero-padding with (F-1)/2"
+
+e.g. F=3 => zero pad with 1
+	 F=5 => zero pad with 2
+	 F=7 => zero pad with 3
+
+Remember before: 32x32 input convolved repeatedly with 5x5 filters shrinks volumes 
+spatially (32 -> 28 -> 24 ...). Shrinking too fast is not good, doesn't work well
+because you're using smaller and smaller activation maps to represent your image and
+you're also kind of using edge/corner information. So, it's good to use zero-padding
+
+Practice:
+
+
+Input volume 32x32x3
+
+10 5x5 filters with stride 1, pad 2
+
+(32 + 2*2 - 5)/1 + 1 = 32, So
+
+= 32x32x10
+
+ 
+Input volume 32x32x3
+10 5x5 filters with stride 1, pad 2
+
+number of parammeters in this layer??
+each filter has 5x5x3 + 1 = 76 parammeters (+1 for the bias)
+=> 76 * 10 = 760 
+
+
+To summarize the conv. layer:
+
+1. Accepts a volume of size W1 x H1 x D1
+
+2. Requires four hyperparameters:
+
+	- Number of filters K,
+	- their spatial extent F,
+	- the stride S,
+	- the amount of zero padding P
+
+3. Produces a volume size W2 x H2 x D2 where:
+
+	- W2 = (W1 - F + 2P)/S + 1
+	- H2 = (H1 - F + 2P)/s + 1
+	- D2 = K
+
+Common Settings - 
+
+K = (powers of 2, e.g. 32, 64, 128, 512)
+- F=3, S=1, P=1
+- F=5, S=1, P=2
+- F=5, S=2, P=2
+- F=5, S=2, P=? (whatever fits)
+- F=1, S=1, P=0
+
+btw, 1x1 convolution layers make perfect sense    
+
+---------------------
+--- Pooling layer ---
+---------------------
+
+- makes the representations smaller and more manageable (downsampling)
+- operates over each activation map independetly
+
+1. Accepts a volume of size W1 x H1 x D1
+2. Requires 2 hyperparameters: their spatial extent F, stride S
+3. Produces a volume of size W2 x H2 x D2 where:
+
+W2 = (W1 - F)/S + 1
+H2 = (H1 - F)/S + 1
+D2 = D1
+
+4. Introduces zero parameters since it computes a fixed function of the input
+5. Note that it is not common to use zero-padding for pooling layers because you're
+just trying to directly downsample 
+
+Max Pooling:
+
+(view image0)
+
+--------------------------------------------------------
+--- Fully Connected Layer (at the end of the system) ---
+--------------------------------------------------------
+
+- Get the output of the ConvNet
+
+- we want to aggregate all of this together and reason from this 
+
+- what we get from this are our score outputs
+
+ConvNetJS demo - training on CIFAR-10:
+
+"http://cs.stanford.edu/people/karpathy/convnetjs/demo/cifar10.html"
+
+--------------
+--- Trends ---
+--------------
+
+- ConvNets stack CONV, POOL, FC layers
+- trend towards smaller filters and deeper architectures
+- trend towards getting rid of POOL/FC layers (just CONV)
+- Typical architectures look like
+
+[(CONV-RELU)*N-POOL?]*M-(FC-RELU)*K,SOFTMAX
+where N is usually up to ~5, M is large, 0 <= K <= 2
+
+- but recent advances such as ResNet/GoogLeNet challenge this paradigm
+

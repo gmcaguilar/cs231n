@@ -1,0 +1,25 @@
+
+
+1. stride is a ratio of how much you move in the input vs. how much you move in the
+output
+ 
+e.g. a 3x3 convolution with a stride of 2 pad 1 will have a ratio of 2:1, in that
+with every pixel move in the output activation map, you move two in the input image.
+
+2. With classification problems, use cross-entropy loss, softmax loss, SVM or margin
+type loss. 
+
+For regression problems, your output is continuous and so you tend to use different
+types of losses, typically an L1 or L2 loss 
+
+3. At each layer of the convolutional network our input image is maybe 3 x 224 x 224 and
+it goes through many stages of convolution, and then after each conv layer is some 
+3-dimensional chunk of numbers which are the outputs from that layer of the convnet.
+That entire 3-dimensional chunk of numbers we call an "activation volume", and one
+of those slices is an "activation map"
+
+4. this whole field of trying to visualize neural network is a response to a common 
+criticism of deep learning. A common ciriticism is you've got this big black box
+network you train it on gradient descent, you get a good number and that's great 
+but we don't trust the network because we don't understand as people why it's making the
+decisions that it's making

@@ -1,0 +1,235 @@
+---------------------
+--- Assignment 1 ----
+---------------------
+
+- http://cs231n.github.io/assignments2017/assignment1/
+
+---------------------------------------------------
+--- How to measure how bad our predictions are? ---
+---------------------------------------------------
+
+- for some setting of W, we can come up with class scores
+for an image
+
+Loss Function:
+
+- tells how *bad* our current classifier is (measures badness, not goodness)
+- Given {(x,y)} where x is image and y is the target or label
+- Li is the loss function that takes in the predicted scores and target
+and outputs a value that represents the accuracy
+- L is the average of the losses 
+- L = (1/N)sum(Li(f(x,W),y))
+- find the W that minimizes L
+
+----------------------------
+--- Multi-class SVM loss ---
+----------------------------
+
+- to compute Li perform a sum over all the categories y, except
+for the true category yi 
+
+- "Hinge Loss"
+
+- the *true score* must be high enough than the other scores
+by a certain margin or the model will incur some loss 
+
+- the certain margin is kind of random. We really only care that
+the true score is high-enough
+
+- min loss is 0 and max is infinity
+
+- At initialization W is small so all s is approximately 0, what is the expected
+loss? 
+
+Answer --> # of classes - 1
+
+*This is a good debugging strategy* know your expected loss and if it doesn't 
+output that, then you probably have a bug. For example, at initialization the
+loss must be # of classes - 1
+
+- What if the sum was over all the classes?
+
+Answer --> the loss increases by 1
+
+- Suppose that we found a W such that L=0. Is this W unique? 
+
+Answer --> No. 2W also has a zero loss 
+
+- How does the model choose from all of these Ws with zero losses?
+
+----------------------------------------------------------------
+--- Why it's wrong to just tell our model to get a zero loss ---
+----------------------------------------------------------------
+
+- if the only thing we tell our classifier to do is to fit the training data,
+then it will *perfectly* fit the training data, causing overfitting
+
+- to solve this we use *regularization* 
+
+- Regularization is the concept that the model should be "simple", so it
+works on test data. This is done by adding a regularization term to the loss
+term
+
+- In summary, the Loss function usually has two terms, a *Data Loss* and 
+a *Regularization term* with a hyperparameter *lambda* that trades off between
+the two 
+
+----------------------
+--- Regularization ---
+----------------------
+
+- L1 regularization: penalizing the L1 norm of the weight vector
+- L2 regularization(weight decay): penalizing the euclidean norm of the weight vector
+- Elastic net (L1 + L2): some combination of L1 and L2
+- Dropout
+- Batch normalization
+- Stochastic Depth
+
+Reglularization penalizes the model by its complexity 
+
+To choose: how do YOU think complexity should be chosen with the problem you're solving?
+
+------------------------------------------------------
+--- Multinomial Logistic Regression (Softmax Loss) ---
+------------------------------------------------------
+
+- with Muti-class SVM loss we didn't really put much meaning on our scores,
+we just said that we want the true score to be greater than the incorrect classes
+
+- but for this, we will endow our scores with meaning
+
+- in particular, we will use the scores to compute a probability distribution
+
+- using *softmax function* we take all of our scores and exponentiate them and 
+then renormalize them by the sum of those exponents. Each probability will be between
+0 and 1 and the sum over all the classes come up to 1.
+
+- if we know the thing is a cat, the target probability distribution would put
+all the probability mass on "cat" so it will be 1 and 0 for other classes.
+
+- encourage probability distribution to match our target probability distribution
+(cat)
+
+- Li = -log*P(Y = yi | X = xi)
+
+- log is monotonic so if we maximize logP of correct class, that means we 
+want that to be high, but loss functions measure badness not goodness so we 
+have to put it in the negative.
+
+- At initialization W is small so all s is approximately 0, what is the expected
+loss? 
+
+Answer --> -log(1/c) = log(c)
+
+if the first iteration is not log(c) then there's probably a bug
+
+- Comparison: SVM loss just needs to overcome the specified margin and it declares a 
+winner. On the other hand, Softmax always tries to continually improve every single
+data point to get better and better.
+
+-------------
+--- Recap ---
+-------------
+
+- we have some dataset of (x,y)
+- we have a *score function* to compute our scores  
+- we have a *loss function* to compute how bad our predictions are 
+- we often augment our loss function with a regularization term that
+trades off between fitting the training data and preferring simpler models
+- this is a generic overview of a *supervised learning* system
+
+----------------------------------------------------------
+--- How to choose values for our parameters/weights W? ---
+----------------------------------------------------------
+
+Optimization:
+
+- this is not that easy
+
+- in practice once the prediction function, loss function, regularization 
+get big and complex, then you can't really hope in trying to write down
+an explicit analytic solution that takes you right away to the minimum
+
+- in practice, we tend to use various iterative methods
+
+Strategy:
+
+- follow the slope, where is the slope of the ground taking me to a lower height?
+Take a step toward that direction and ask yourself again, and on and on..
+
+- in multiple dimensions, the *gradient* is the vector of partial derivatives
+along each dimension
+
+- the gradient points to the direction of greatest increase of a function.
+Correspondingly, if you look at the negative of the gradient, then it points
+to the direction of greatest decrease
+
+- if you want to know what is the slope of my landscape in any direction? Then it is
+equal to the dot product of the gradient with the unit vector describing that direction
+
+- gradient is super important because it gives you this linear first-order 
+approximation to your function at your current point
+
+- a lot of deep learning is about computing gradients of functions and then using
+those gradients to iteratively update your parameter vector 
+
+--------------------
+--- Optimization ---
+--------------------
+
+- the loss is just a function of W
+
+- use calculus to compute an *analytic gradient*, this is way more efficient
+than trying to compute using finite differences
+
+In summary:
+ 
+a. numerical gradient: approximate, slow, easy-to-write
+b. analytic gradient: exact, fast, error-prone
+
+In practice:
+
+ALWAYS use analytic gradient, but check implementation with numerical
+gradient. This is called a *gradient check*
+
+------------------------
+--- Gradient Descent ---
+------------------------
+
+- Once we know how to compute the gradient, it leads us to this simple
+algorithm that is at the heart of even complex learning systems: *gradient descent*
+
+Steps:
+
+1. Initialize W with some random thing
+
+2. While true, compute our loss and our gradient 
+
+3. update weights in the opposite of gradient direction
+
+- step size is how much we want to go to the direction of the gradient after
+computing it AKA *learning rate*. VERY IMPORTANT hyperparameter 
+
+- In practice, we tend to use "Stochastic Gradient Descent" because if N is
+large (millions), then we would have to iterate through millions to compute
+our gradient. With SGD however, we sample some small set of training examples
+called a minibatch (powers of 2 by convention 32,64,128, etc.). This is an 
+estimate.
+
+------------------------
+---  Image Features  ---
+------------------------
+
+- Linear classifiers get fed raw pixels
+- this doesn't work so well because of things like multi-modality
+- before dominance of deep NNs, there was this 2-step approach that was common:
+	1. take your image and compute various feature representations of that image
+	2. concatentate these feature vectors to get a feature representation of the image
+	3. this would then be fed into the classifier instead of the raw pixels
+
+Motivation:
+
+- cannot separate red and blue points on a certain problem set 
+- after applying feature transform, points can be separated by a linear classifier
+- this is better than feeding in raw pixels 
+- e.g. color histogram, histogram of oriented gradients, bag of words

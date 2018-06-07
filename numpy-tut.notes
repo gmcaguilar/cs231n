@@ -1,0 +1,13 @@
+--- Overview ---
+
+- Numpy is the core library for scientific computing in Python
+- provides high-performance multidimensional array object
+- provides tools for working with these arrays
+
+--- Arrays ---
+
+- A numpy array is a grid of values, all of the same type
+- indexed by a tuple of nonnegative integers
+- The number of dimensions is the "rank" of the array
+- the "shape" of an array is a tuple of integers giving the size
+  of the array along each dimension

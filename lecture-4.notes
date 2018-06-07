@@ -1,0 +1,33 @@
+------------------------------------------------------------------------------
+--- How to compute the analytic gradient for arbitrarily complex functions ---
+------------------------------------------------------------------------------
+
+Computational graphs:
+
+- we can use this kind of graph to represent any function where the 
+nodes of the graph are the steps of the computation 
+
+- after expressing a function using a computational graph, we could use
+a technique called *backpropagation* which is going to recursively use the
+chain rule in order to compute the gradient w.r.t. every variable in the computational
+
+-----------------------
+--- Backpropagation ---
+-----------------------
+
+1. compute the gradient of the output 
+2. "backpropagate" and compute the gradient of the previous nodes using chain rule
+
+Always check: the gradient with respect to a variable should have the same shape as
+the variable (vectorized examples)
+
+---------------
+--- Summary ---
+---------------
+
+- We arrange neurons into fully-connected layers
+
+- the abstraction of a layer has the nice property that it allows us to use
+efficient vectorized code (e.g. matrix multiplies)
+
+- Neural networks are not really "neural"

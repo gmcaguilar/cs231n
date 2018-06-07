@@ -1,0 +1,238 @@
+--------------------
+--- Assignment 1 ---
+--------------------
+
+- K-Nearest Neighbor
+- Linear classifiers: SVM, Softmax
+- Two-layer neural network
+- Image features
+
+-------------------------------
+--- Python + Numpy tutorial ---
+-------------------------------
+
+- http://cs231n.github.io/python-numpy-tutorial/
+
+-----------------------------
+--- Google Cloud Tutorial ---
+-----------------------------
+
+- http://cs231n.github.io/gce-tutorial/
+
+----------------------------
+--- Image Classification ---
+----------------------------
+
+- a core task in CV
+- how do we work on this task?
+- system receives an input image (eg. cat)
+- given a set of discrete labels {dog,cat,truck,plane}
+- goal of the system is assign one of these labels
+- very difficult problem for a machine
+- computer sees a gigantic grid of numbers
+- an image is just a big grid of numbers between [0,255]
+- e.g. 800 x 600 x 3 where 3 represents RGB
+
+Problem: Semantic Gap
+
+Challenges:
+
+- Viewpoint 
+- Illumination
+- Deformation
+- Occlusion
+- background clutter
+- intraclass variation
+
+[python]
+
+def classify_image(image):
+	# some magic here?
+	return class_label
+[end]
+
+- no obvious way to hard-code the algorithm for
+recognizing a cat, or other classes
+
+-------------------------------
+--- Attempts have been made ---
+-------------------------------
+
+- Find edges
+- Find corners
+- According to Hubel & Wiesel
+- *DOES NOT* work very well, since it's not generalized or 
+scalable. (i.e. if the image was changed to a fish, have to re-write)
+
+----------------------------
+--- Data-Driven Approach ---
+----------------------------
+
+1. Collect a dataset of images and labels
+2. Use ML to train a classifier
+3. Evaluate the classifier on new images
+
+Two functions:
+
+a. train()
+	- input images and labels
+b. predict()
+	- input model
+	- output prediction
+
+------------------------------------------
+--- First classifier: Nearest Neighbor ---
+------------------------------------------
+
+[python]
+def train(images, labels):   		--> Memorize all data and labels
+	# ML!
+	return model
+
+
+def predict(model, test_images):	--> Predict the label of the most similar training image
+	# use model to predict labels
+	return test_labels
+[end]
+
+CIFAR10 dataset:
+
+- 10 classes
+- 50,000 training images
+- 10,000 testing images
+
+L1 (Manhattan) distance:
+
+- Distance metric to compare images
+- sum of the absolute value of the differences of the pixels
+d1(I1,I2) = summation of pixels in the difference result(abs(I1p - I2p))
+- kind of a stupid way to compare images
+
+Time complexity:
+
+- with N examples
+- train O(1), predict O(N)
+- this is bad, we want classifiers that are *fast*
+at *prediction*; slow for training is ok
+
+----------------------------
+--- K-Nearest Neighbors ----
+----------------------------
+
+- instead of copying label from nearest neighbor 
+- take *majorite vote* from K closest points
+- almost always want to use a value of K > 1
+- simple but is a good algorithm to try first when trying a new problem
+
+L2 (Euclidean) distance:
+
+- square of the distance of the two pixels
+- square root of the sum of the above values
+- L1 distance depends on choice of coordinate system 
+cause if the square is rotated, the distance of a point from 
+the origin changes, unlike in the L2 which uses a circle
+- if the input vectors have some important meaning in your task,
+maybe L1 makes more sense, otherwise, maybe L2
+
+Interactive KNN Demo: vision.stanford.edu/teaching/cs231n-demos/knn/
+
+- when using this algorithms there are choices you need to make 
+called "Hyperparameters"
+
+Hyperparameters:
+
+- best k values to use?
+- best distance to use?
+- these are choices that we set rather than learn
+- depends on the problem 
+
+a. Idea 1: Choose hyperparameters that work best on the data
+	
+	- this is a terrible idea since k = 1 always works perfectly on training data
+
+b. Idea 2: Split data into train and test, choose hyperparameters that work 
+		   best on test data
+
+	- no idea how algorithm will perform on new data since maybe you just choose
+	  the best hyperparameters for only the testing data
+
+c. Idea 3: Split data into train, val, and test; choose hyperparameters on val
+		   and evaluate on test
+
+	- better. Choose hyperparameters on val and evaluate on test
+
+d. Idea 4: Cross-Validation which splits data into folds
+
+	- try each fold as validation and average the results
+	- useful for small datasets, not as much for deep learning
+
+Setting hyperparameters:
+
+- after cross-validation, a graph that shows how a model
+works for each fold would be a useful visual aid to pick the one
+
+Actual Application:
+
+- KNN on images are never used
+- very slow at  test time 
+- distance metrics on pixels are not informative
+- Curse of dimensionality: we need to densely occupy all dimensions
+but that means we'll need and exponential amount of images as dimensions increase.
+This is bad because you'll never get enough images
+
+
+----------------------------
+---- Linear Classifiers ----
+----------------------------
+
+- simple algorithm but important in understanding CNNs
+
+- NNs are like lego blocks: they are built of different components
+that you can stick together. An example of such a component is a linear 
+classifier
+
+- simplest example of a *parametric model*
+
+- this has two components, an input of an image "x", and a set
+of parameters or weights "W" which is sometimes referred to as theta.
+
+- outputs 10 numbers giving class scores
+
+- in KNN there were no parameters, we just sort of keep the training data
+even during test time. But, with linear classifiers, we can 
+*inject all of our knowledge into the parameters W* so we no longer need 
+the actual training data during test time.
+
+- *this makes the model more efficient and allows the model to run on devices*
+*like phones*
+
+- f(x,W) = Wx + b
+where W is 10 x 3072, x is 3072 x 1 which gives our 10 class scores
+when the two vectors/matrices are multiplied 
+
+b is sometimes added which is a bias term 10 x 1. Just gives some data preferences
+over the others. (e.g. if there are many more cats in the data set, then the bias
+	element corresponding to cats would be higher than the other values)
+
+- sort of like "template matching" where each of the rows in the matrix 
+corresponds to some template of the image. Computing the dot product
+sort of like gives a similarity with the template of the class and the
+pixels of the image
+
+- with the idea of "template matching", we could actually take the rows
+of the matrix W and insert images into them
+
+- linear classifiers are restricted into learning a single template for 
+a category (i.e. one horse template for a whole row of horse images in W)
+
+- in NNs, accuracy increasese because we would not be limited to one 
+template anymore
+
+Hard Cases for Linear Classifiers:
+
+- suppose 2 categories
+- separating odds from evens
+- multi-modal situations
+- there is no way to draw a distinct boundary line for these cases
+
+How do we choose the right values for W?

@@ -1,0 +1,137 @@
+------WHY CV is important-----
+
+	1. 2015 study from CISCO estimated that by 2017 roughly majority of the bits fying in the internet are bits
+
+	2. Visual data are hard to understand ("dark matter of the internet")
+
+	3. Roughly every second, 5 hours of video are being uploaded to YouTube. CANNOT manually watch this video and annotate
+
+-----CV branches------- 
+
+	1. Physics
+	2. Biology
+	3. Psychology
+	4. Computer Science
+	etc.
+
+-----A brief history of computer vision-----
+ 	A. Biological Vision
+	- 543 million years ago 
+	- life was very chill
+	- 540 million years ago the first animals developed eyes
+	- 50% of neurons in humans are dedicated to vision
+
+	B. Mechanical Vision (Camera)
+
+	- Camera Obscura
+	- Very similar to eyes
+	- Hubel & Wiesel, 1959: What was the visual processing like in mammals?
+	- They studied cat brains and sticked electrons there in the back of the cortex
+	- Looked at what stimuli respond excitedly 
+	- Learned there are simple cells that respond
+	- Visual processing starts with simple structures
+
+	C. Computer Vision
+
+	- Block World, Larry Roberts, 1963
+	- The Summer Vision Project, 1966 
+	- We still not have yet solved vision but it has grown as a big sector of A.I.
+	- Late 70s, Vision by David Marr
+
+	D. Vision by David Marr Steps to Produce a 3D Model
+
+	1. Primal Sketch
+	2. 2 1/2-D sketch
+	3. 3D Model 
+
+	- Not alot of solutions have been made that can be used in the real-world realistically
+
+	- if object recog is too hard, maybe we should do object segmentation first
+
+	E. Object Segmentation 
+		- taking pixels and grouped them in several areas 
+
+	F. Face Recognition
+		- using ADA boost algorithm to do real-time face detection by Paul Bueller and Michael Jones (2001)
+
+		- After 5 years, FujiFilm rolled out the first face recog camera
+
+	E. Feature-dependent Recognition
+
+		- "SIFT" & Object Recog, David Lowe (1999)
+
+	- Object Recognition is very important to solve
+	
+	- PASCAL Visual Object Challenge was a benchmark created in the early 2000s to measure our progress on solveing the problem of obj. rec.
+
+	- Contains 20 object classes, 1000-10000 per category
+
+	- Visual data is very complex 
+
+	- Because of this, there are a lot of parameters and if we do not have a lot of data, overfitting happens
+
+	- In 2009, ImageNet was started with the mission of solving overfitting and recognizing objects. Putting together the largest dataset of all the pictures one can find in the world of objects. End result of 22000 categories with a total of 14 million images
+
+	- The winning algorithm of 2012 ImageNet challenge was Convolutional Neural Networks. This showed the potential of Deep Learning
+
+---- About the course ----
+
+	- CS231 focuses on an important problem of visual recognition -- image classification
+
+	- There is a number of visual recog problems related to image recog such as object detection or image captioning
+
+		a. Object detection setup is different in that it breaks down the components of an iamge (there is a dog here, a bike there, etc. and draw boxes)
+
+		b. Image captioning produces a natural language describing the image
+
+	- CNNs or "ConvNets" have become an important tool for object recognition
+
+	- Breakthrough was in 2012 when Geoffrey Hinton together Alex Krizhevsky, Ilya Sutskever created a 7-layer Conv. Neural Network now known as AlexNet
+
+	- Since 2012, the winner for ImageNet have been ConvNets
+
+	- CNNs were not invented in 2012 or overnight 
+
+	- A foundational contribution was made in 1998 be LeCun et. al. where they made something that looked very similar to 2012's CNN
+
+	- If they've been around since the 90's why have they only been popular recently? 
+
+		a. Computation - thanks to Moore's Law GPUs have grown in number of transistors
+
+		b. Data - these algorithms are labeled data-hungry but now, there existed these incredibly large datasets that are orders of magnitude bigger
+
+		- main point is CNNs aren't "fancy" or "new" tricks
+
+	- The quest for visual intelligence goes far beyond object recog
+
+		a. Activity Recog
+		b. VR and AR
+
+	- Holy grail of computer vision is to understand the story of an image
+
+	- Our algorithms today are a LONG way to go from truly understanding an image 
+
+	- CV is useful medical technology, everyday lives, law enforcement, etc.
+
+--- Philosophy of the class ---
+	
+	- Understand how to write from scratch, debug, and train CNN
+	- Focus on practical techniques for training these networks at scale, and on GPUs such as TensorFlow, PyTorch, Caffe
+	- STATE OF THE ART
+	- Fun topics such as Image Captioning (using RNN), DeepDream, and NeuralStyle, etc.
+
+--- PSets, Exams, and Project --- 
+
+	- 3 PSets
+	- Midterm Exam 
+	- Final Course Project
+
+--- Pre-reqs ---
+	
+	- Proficiency in Python 
+	- College Calculus, Linear Algebra
+	- A little knowledge of machine learning
+
+--- Course website ---
+
+	- http://cs231n.stanford.edu

@@ -1,0 +1,190 @@
+-------------------------
+--- Gaps in knowledge ---
+-------------------------
+
+1. In-depth knowledge about L1/L2 distances and when to use one or the other *DONE*
+2. Hyperparameter search and what hyperparameters are most important *DONE*
+3. How does bias put more weight or emphasis on an input? Also, is there a bias trick? *DONE*
+4. Loss functions and when to use a certain one how to use a cd *need to work on softmax understanding*
+5. Types of regularizations and how they penalize a model 
+6. How to choose a learning rate
+7. Analytic vs Numerical gradien6t
+8. How does backpropagation work again?
+9. When to use certain activation functions
+10. How to preprocess data and why it's important
+11. How to initialize weights and why initializing these weights correctly
+matter
+12. How does batch normalization work?
+13. Different loss functions and when to use which
+14. Gradient checks
+15. Sanity checks
+16. Babysitting the learning process
+17. Momentum + Nesterov
+18. Second-order methods
+19. Adagrad/RMSprop                                                              
+20. Hyperparameter optimization
+21. Model ensembles
+22. Convnet layers
+23. Spatial arrangement
+24. Layer patterns
+25. layer sizing patterns
+26. Understanding and visualizing ConvNets
+27. What exactly is transfer learning and hwosig does it work
+28. How to fine-tune a convolutional neural network
+
+
+--- 1 --------------------------------------------------------------------------------
+
+- L1 distance uses Manhattan distance
+
+- L2 distance uses Euclidean distance
+
+- Different distance metrics make different assumptions on the underlying geometry
+or topology you expect in the space
+
+- L1 forms a square shape on the origin where each of the points on the square is
+equidistant from the origin
+
+- L2 forms a circle on the origin 
+
+- L1 vs L2: L2 is much more unforgiving than the L1 distance when it comes to 
+differences between two vectors. That is, the L2 distance prefers many medium 
+disagreements to one big one 
+
+- L1 distance depends on choice of coordinate system so if you were to rotate the 
+coordinate frame, it will change the L1 distance between the points. But in the L2
+distance, changing the coordinate frame doesn't affect the points' distances from
+each other
+
+- Use L1 if your input features or individual entries in your vector have some 
+important meaning for your task
+
+- Use L2 if it's just a generic vector in some space and you don't know what they
+actually mean
+
+--- 2 ---------------------------------------------------------------------------------
+
+- Hyperparameters are parameters that affect the learning model
+
+- e.g. best k values to use for KNN, best distance to use for calculating error
+
+- these are choices that we set rather than learn 
+
+- choice highly depends on the problem
+
+--- 3 ---------------------------------------------------------------------------------
+
+- the bias is a value or a set of values(vector) that influences the output scores 
+without modifying the actual data x. 
+
+- When the weights are multiplied to the input image pixel values, i.e. W*x (where each
+row in W corresponds to the weights of a certain class) the bias b is then added to the
+matrix product where each row in the 1-dimensional bias vector corresponds to the bias
+value of a certain class. 
+
+If preference must be given to a certain class, the bias value is increased for that 
+class. If disfavor must be given to a certain class, the bias value is decreased for
+that class.
+
+- There is a bias trick that can be used to simply the representation of the two 
+parameters W and b:
+
+
+f(x,W,b) = Wx + b 
+
+can be simplified to ->
+
+f(x,W) = Wx
+
+
+by combining W and b to a single matrix and then extending the input vector x with 
+one additional dimension that always holds the constant 1.
+
+- e.g. if W is 3x4, x is 4x1, and b is 3x1, then the new matrix will be 3x5 and the 
+new x input vector will be 5x1.
+
+--- 4 ---------------------------------------------------------------------------------
+
+- Loss functions or cost functions measure "badness" or the inaccuracy of the  learning
+model
+
+- Will be high if we're doing a poor job of classifying the training data and it will 
+low if we're doing well
+
+a. SVM loss (uses the hinge loss) 
+
+- wants the correct class for each image to have a score higher than the incorrect
+classes by some fixed margin 
+
+- has the form Li = sum(max(0, sj - syi + 1))
+
+b. Softmax loss (uses the cross-entropy loss)
+
+- generalization of binary logistic regression to multiple classes. 
+
+- P(Y = k | X = xi)  = (some fraction) 
+
+- Li = -log(P(Y = yi | X = xi))
+
+- if we maximize logP of correct class, that means we want that to be high, but loss
+functions measure badness and not goodnes, so we need to put the minus 1 to make it 
+the right way
+
+- 
+--- 5 ---------------------------------------------------------------------------------
+
+- regularization penalizes a model's complexity by 
+--- 6 ---------------------------------------------------------------------------------
+
+--- 7 ---------------------------------------------------------------------------------
+
+Numerical Gradient vs. Analytic Gradient
+
+- Numerical gradient(using finite differences) is approximate, slow, easy to write 
+
+- Analytic gradient is exact, fast, error-prone
+
+- In practice: ALWAYS use analytic gradient, but check implementation with numerical
+gradient. This is called a *gradient check*
+
+--- 8 ---------------------------------------------------------------------------------
+
+--- 9 ---------------------------------------------------------------------------------
+
+--- 10 --------------------------------------------------------------------------------
+
+--- 11 --------------------------------------------------------------------------------
+
+--- 12 --------------------------------------------------------------------------------
+
+--- 13 --------------------------------------------------------------------------------
+
+--- 14 --------------------------------------------------------------------------------
+
+--- 15 --------------------------------------------------------------------------------
+
+--- 16 --------------------------------------------------------------------------------
+
+--- 17 --------------------------------------------------------------------------------
+
+--- 18 --------------------------------------------------------------------------------
+
+--- 19 --------------------------------------------------------------------------------
+
+--- 20 --------------------------------------------------------------------------------
+
+--- 21 --------------------------------------------------------------------------------
+
+--- 22 --------------------------------------------------------------------------------
+
+--- 23 --------------------------------------------------------------------------------
+
+--- 24 --------------------------------------------------------------------------------
+
+--- 25 --------------------------------------------------------------------------------
+
+--- 26 --------------------------------------------------------------------------------
+
+--- 27 --------------------------------------------------------------------------------
+
+--- 28 --------------------------------------------------------------------------------
