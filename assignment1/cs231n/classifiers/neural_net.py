@@ -75,7 +75,20 @@ class TwoLayerNet(object):
     # Store the result in the scores variable, which should be an array of      #
     # shape (N, C).                                                             #
     #############################################################################
-    pass
+    
+    # FC1 layer
+    fc1_activation = np.dot(X, W1) + b1
+    
+    # Relu layer
+    relu_1_activation = fc1_activation
+    relu_1_activation[relu_1_activation < 0] = 0
+    
+    # FC2 layer
+    fc2_activation = np.dot(relu_1_activation, W2) + b2
+    
+    # output scores
+    scores  = fc2_activation
+    
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################
@@ -92,7 +105,9 @@ class TwoLayerNet(object):
     # in the variable loss, which should be a scalar. Use the Softmax           #
     # classifier loss.                                                          #
     #############################################################################
-    pass
+    
+    
+    
     #############################################################################
     #                              END OF YOUR CODE                             #
     #############################################################################

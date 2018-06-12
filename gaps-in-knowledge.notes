@@ -5,16 +5,20 @@
 1. In-depth knowledge about L1/L2 distances and when to use one or the other *DONE*
 2. Hyperparameter search and what hyperparameters are most important *DONE*
 3. How does bias put more weight or emphasis on an input? Also, is there a bias trick? *DONE*
-4. Loss functions and when to use a certain one how to use a cd *need to work on softmax understanding*
-5. Types of regularizations and how they penalize a model 
-6. How to choose a learning rate
-7. Analytic vs Numerical gradien6t
-8. How does backpropagation work again?
-9. When to use certain activation functions
+4. SVM vs. Softmax (also, hinge loss vs. cross-entropy loss) *need to work on softmax understanding*
+5. What is regularization? Types of regularizations, when to use which, and how do they penalize a model? *DONE*
+6. How to choose a learning rate *DONE*
+7. Analytic vs Numerical gradient *DONE*
+8. How does backpropagation work? What is the chain rule interpretation? *DONE*
+What are some patterns in the gradient flow?
+9a. Quick introduction/basics on Neural Nets *DONE*
+9c. When to use certain activation functions
+9d. Neural net architecture
+9e. Representational power
 10. How to preprocess data and why it's important
 11. How to initialize weights and why initializing these weights correctly
 matter
-12. How does batch normalization work?
+12. What is batch normalization and how does it work?
 13. Different loss functions and when to use which
 14. Gradient checks
 15. Sanity checks
@@ -29,9 +33,20 @@ matter
 24. Layer patterns
 25. layer sizing patterns
 26. Understanding and visualizing ConvNets
-27. What exactly is transfer learning and hwosig does it work
+27. What exactly is transfer learning and how does it work
 28. How to fine-tune a convolutional neural network
+29. Wtf is a tensor?
 
+Additional:
+
+1. Learn basics of Tensorflow
+
+- https://www.youtube.com/watch?v=B5nCOPAJfoE&t=0s&list=PLBAGcD3siRDguyYYzhVwZ3tLvOyyG5k6K&index=77
+
+
+2. Learn how to implement a ConvNet in TensorFlow
+
+-  https://www.youtube.com/playlist?list=PL9Hr9sNUjfsmEu1ZniY0XpHSzl5uihcXZ
 
 --- 1 --------------------------------------------------------------------------------
 
@@ -71,6 +86,21 @@ actually mean
 - these are choices that we set rather than learn 
 
 - choice highly depends on the problem
+
+- NEVER try out many different values and see what works best on the TEST SET.
+
+- Treat the test set asa very precious resource that should ideally never be touched
+until one time at the very end. If you tune your hyperparameters on the test set, you
+are effectively using the test set as the training set, and therefore the performance 
+you achieve on it will be too optimistic with respect to what you might actually observe
+when the model is deployed.
+
+- One trick is is splitting the training set in two: a slightly smaller training set, and 
+a validation set. This gives you 3 sets in total: training, validation, and test set.
+
+- This can be taken one step further by using the method called *cross validation*. 
+With this method, you split your data into folds and take turns on which part is the
+training set, and which part is the validation set.
 
 --- 3 ---------------------------------------------------------------------------------
 
@@ -133,8 +163,43 @@ the right way
 - 
 --- 5 ---------------------------------------------------------------------------------
 
-- regularization penalizes a model's complexity by 
+- regularization penalizes a model's complexity to make it simpler and avoid overfitting.
+
+- it does this by adding a regularization term to the loss function. This regularization 
+term can vary(L1 norm, L2 norm, etc.) but it's always combined with a lambda hyperparameter
+which controls the tradeoff in terms of complexity. This regularization term penalizes
+larger weights and this is a good thing because it improves generalization since 
+large weights can have a very large influence on the scores all by itself.
+
+- Now, unintuitively, regularization terms are ADDED instead of subtracted. This doesn't
+make sense because aren't we trying to penalize large weights? But, the trick happens
+in the process of gradient descent when the gradient is subtracted to the weights ALONG
+with the derivative of the regularization term.
+
+- Furthermore, there is no simple way of choosing the lambda hyperparameter so it is 
+usually determined via cross-validation.
+
+- L1 vs L2 regularization: L2 is computationally efficient due to having analytical 
+solutions, L2 has non-sparse outputs(many weights are non-zero). 
+
+L1 is computationally inefficient since it does not have analytical solutions on non-sparse
+cases, L2 produces sparse outputs.
+
+- In other words, L1 regularization helps or encourages sparsity while L2 discourages it.
+Besides that situation however, it always makes sense to use L2 regularization. Why does
+L2 discourage sparsity? Well, because regularizing a large term xi results in a much greater
+reduction in norm than doing so to the smaller term x2 = 0. For the L1 penalty however, the
+reduction stays the same.
+
+Thus, L2 penalties in some sense discourage sparsity by yielding diminishing returns as elements
+are moved closer to zero. 
+
+Refer to: https://stats.stackexchange.com/questions/45643/why-l1-norm-for-sparse-models/159379
+
 --- 6 ---------------------------------------------------------------------------------
+
+- best way to choose a learning rate is to perform cross validation over your training 
+and validation sets and pick which learning rate gives you the best results.
 
 --- 7 ---------------------------------------------------------------------------------
 
@@ -149,7 +214,33 @@ gradient. This is called a *gradient check*
 
 --- 8 ---------------------------------------------------------------------------------
 
---- 9 ---------------------------------------------------------------------------------
+- the derivative on each variable tells you the sensitivity of the whole expression on
+its value. 
+
+- 
+
+--- 9a ---------------------------------------------------------------------------------
+
+- s = W2 * max(0, W1 * x)
+
+- the function max(0, -) is a non-linearity that is applied elementwise. There are 
+several choices for the non-linearity, but max is a common choice and simply thresholds
+all activations that are below zero to zero.
+
+Notice that the non-linearity is critical computationally, if left out, the two matrices
+could be collapsed to a single matrix and the predicted class scores would again be a 
+linear function of the input.
+
+The non-linearity is where we get the wiggle.
+
+- the parameters W2, W2 are learned with SGD, and their gradients are derived with 
+chain rule(and computed with backpropagation).
+
+- A 3-layer NN could look like s = W3 * max(0, W2 * max(0, W1 * x)), where all of W3,
+W2, W1 are parameters to be learned
+
+- sizes of the intermediate hidden vectors are hyperparameters of the network, which 
+will be discussed later.
 
 --- 10 --------------------------------------------------------------------------------
 
@@ -188,3 +279,4 @@ gradient. This is called a *gradient check*
 --- 27 --------------------------------------------------------------------------------
 
 --- 28 --------------------------------------------------------------------------------
+

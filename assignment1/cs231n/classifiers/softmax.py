@@ -29,7 +29,42 @@ def softmax_loss_naive(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  num_classes = W.shape[1]
+  num_train = X.shape[0]
+    
+  scores = X.dot(W)
+  
+  # compute loss and gradient for each element of the batch
+  for ii in range(num_train):
+    current_scores = scores[ii, :]
+    
+    # for numerical stability, shift values inside the vector f so that the
+    # highest value is zero
+    shift_scores = current_scores - np.max(current_scores)
+    
+    # calculate loss for example
+    loss_ii = -shift_scores[y[ii]] + np.log(np.sum(np.exp(shift_scores)))
+    loss += loss_ii
+    
+    for jj in range(num_classes):
+        
+      # recalculate softmax score for the gradient calculation
+      softmax_score = np.exp(shift_scores[jj]) /np.sum(np.exp(shift_scores))
+    
+      # gradient computation
+      if jj == y[ii]:
+        dW[:,jj] += (-1 + softmax_score) * X[ii]
+      else:
+        dW[:,jj] += softmax_score * X[ii]
+        
+  # Average over the batch and add regularization term
+  loss /= num_train
+  loss += reg * np.sum(W**2)
+    
+  # Average over the batch and add derivative of reg term
+  dW /= num_train
+  dW += 2 * reg * W
+    
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################
@@ -53,7 +88,37 @@ def softmax_loss_vectorized(W, X, y, reg):
   # here, it is easy to run into numeric instability. Don't forget the        #
   # regularization!                                                           #
   #############################################################################
-  pass
+  
+  num_train = X.shape[0]
+  
+  # calculate scores and numeric stability fix
+  scores = np.dot(X, W)
+  shift_scores = scores - np.max(scores, axis=1)[:,np.newaxis]
+   
+  # calculate softmax scores
+  softmax_scores = np.exp(shift_scores) / np.sum(np.exp(shift_scores), axis=1)[:,np.newaxis]
+
+  # compute dScore, the gradient w.r.t. softmax scores
+  dScore = softmax_scores
+  dScore[range(num_train),y] = dScore[range(num_train),y] - 1
+    
+  # backprop dScore to calculate dW
+  dW = np.dot(X.T, dScore)
+    
+  # take the average over # of training examples and add reg
+  dW /= num_train
+  dW += 2 * reg * W
+
+  # compute cross entropy loss
+  correct_class_scores = np.choose(y, shift_scores.T) # Size N vector
+  loss = -correct_class_scores + np.log(np.sum(np.exp(shift_scores), axis=1))
+  loss = np.sum(loss)
+
+  # average loss and append regularization
+  loss /= num_train
+  loss += reg * np.sum(W**2)
+  
+
   #############################################################################
   #                          END OF YOUR CODE                                 #
   #############################################################################

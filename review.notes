@@ -1,0 +1,252 @@
+---------------------------------
+--- Module 1: Neural Networks ---
+---------------------------------
+
+--------------------------------------------------------
+  Neural Networks Part 1: Setting up the Architecture
+--------------------------------------------------------
+
+Quick Intro:
+
+- s = W2 * max(0, W1 * x)
+
+- the function max(0, -) is a non-linearity that is applied elementwise. There are 
+several choices for the non-linearity, but max is a common choice and simply thresholds
+all activations that are below zero to zero.
+
+Notice that the non-linearity is critical computationally, if left out, the two matrices
+could be collapsed to a single matrix and the predicted class scores would again be a 
+linear function of the input.
+
+The non-linearity is where we get the wiggle.
+
+- the parameters W2, W2 are learned with SGD, and their gradients are derived with 
+chain rule(and computed with backpropagation).
+
+- A 3-layer NN could look like s = W3 * max(0, W2 * max(0, W1 * x)), where all of W3,
+W2, W1 are parameters to be learned
+
+- sizes of the intermediate hidden vectors are hyperparameters of the network, which 
+will be discussed later.
+
+
+Modeling one neuron:
+
+- area of Neural Nets was primarily inspired for modeling biological neural systems but
+has since diverged and become a matter of engineering and achieving good results in ML tasks
+
+- basic computational unit of the brain is a !neuron! (86 billion approx. in the nervous sys.)
+
+- connected with approx. 10^14 - 10^15 !synapses!
+
+- each neuron received input signals from its !dendrites!
+
+- produces output signals along its single !axon!
+
+- axon branches out and connects via synapses to dendrites of other neurons
+
+- the signals that travel along the axons (x0) interact multiplicatively (e.g. w0x0) 
+with dendirites of other neuron based on the synaptic strength at the synapse (w0)
+
+- idea is that synaptic strengths are learnable and control strength of influence
+
+- dendrites carry signal to the cell body where they all get summed
+
+- if final sum is above certain threshold, the neuron can fire, sending a spike along its axon
+
+- we model the firing rate of the neuron with an !activation function f!
+
+- Coarse model - this model of a biological neuron is very coarse: 
+
+a. many different types of neurons, with different properties
+
+b. dendrites in biological neurons perform complex nonlinear computations
+
+c. synapses are not just a single weight, they're complex non-linear dynamical systems
+
+d. exact timing of the output spikes in many systems is known to be important, suggesting
+that the rate code approximation may not hold
+
+
+Single neuron as a linear classifier:
+
+- A single neuron can be used to implement a binary classifier
+
+- e.g. binary Softmax or binary SVM classifiers
+
+
+Commonly used activation functions/non-linearity:
+
+a. Sigmoid 
+
+- squashes real-valued number into range between 0 and 1
+
+- large neg nums become 0 and large pos number become 1
+
+- has seen frequent use historically since it has a nice interpretation as the firing rate
+of a neuron (0 - 1), but has fallen out of favor and is rearely ever used
+
+- two major drawbacks: 
+
+
+(-) Sigmoid saturate and end up killing gradients
+
+- when neuron's activation saturates at either end of 0 or 1, the gradient at these regions
+is almost zero (flat slope)
+
+- recall that during backprop, this local gradient will be multiplied to the gradient of
+this gate's output for the whole objective
+
+- therefore if local gradient is very small, it will effectively "kill" the gradient and
+almost no signal will flow through the neuron to its weights and recursivle to its data
+
+- one must pay extra caution when initializing the weights of sigmoid neurons to prevent
+saturation,
+
+if initial weights are too large then most neurons would become saturated and the network
+will barely learned
+
+
+
+(-) Outputs are not zero-centered 
+
+- neurons in later layers of processing would be receiving data that is not zero-centered
+
+- this is a problem during gradient descent, because if data coming into a neuron is always
+positive, then the gradient on the weights w will either be all positive, or all negative
+during backprop
+
+- this could introduce undesirable zig-zagging dynamics in the gradient updates for the 
+weights
+
+- however, once these gradients are added up across a batch of data, the final update for the
+weights can have variable signs, somewhat mitigating this issue
+
+- thus, this problem has less severe consequences compared to the saturated activation
+above
+
+
+b. Tanh
+
+- squashes a real-valued number to the range [-1, 1] 
+
+- therefore in practice, the tanh non-linearity is always preferred to the sigmoid 
+non-linearity
+
+- Also note that the tanh neuron is simply a scaled sigmoid neuron, in particular the 
+following holds, tanh(x) = 2o(2x) - 1
+
+- pros and cons:
+
+(-) Like the sigmoid neuron, its activations saturate
+
+
+(+) But unlike the sigmoid neuron, its output is zero-centered
+
+
+c. ReLU 
+
+- the Rectified Linear Unit has become very popular in the last few years
+
+- computes the function f(x) = max(0,x)
+
+- in other words, the activation is simple thresholded at zero
+
+- pros and cons:
+
+(+) Found to greatly accerlerate the convergence of SGD compared to sigmoid and tanh
+    functions. Argued that it is due to its linear, non-saturating form 
+
+(+) Compared to tanh/sigmoid neurons that involve expenseive operations, the ReLU can 
+    be implemented by simple thresholding a matrix of activations at zero
+
+(-) Unfortunately, ReLU units can be fragile during training and can "die".
+
+    - for example, a large gradient flowing through a ReLU neuron could cause the weights 
+      to update in such a way that the neuron will never activate on any datapoint again
+
+    - if this happens, then the gradient flowing through the unit will forever be zero 
+      from that point on. That is, the ReLU units can irreversible due during training 
+      since they can get knocked off the data manifold.
+
+    - for example, you may find that as much as 40% of your network can be "dead"
+      (i.e. neurons that never activate across the entire training dataset) if the learning
+      rate is set too high
+
+    - with a proper setting of the learning rate this is less frequently an issue
+
+d. Leaky ReLU
+
+    - Leaky ReLUs are one attempt to fix the "dying ReLU" problem
+
+    - Instead of the function being zero when x < 0, a leaky ReLU will instead have a small
+      negative slope (of 0.01, or so)
+
+    - That is, the function computse f(x) = 1(x < 0)(ax) + 1(x >= 0)(x) where a is a small
+      constant
+
+    - some people report success with this form of activation function,but the results are
+      not always consistent
+
+    -  the slope in the negative region can also be made into a parameter of each neuron,
+       as seen in PReLU neurons
+
+e. Maxout 
+
+	- other types of units have been proposed that do not have the functional form 
+	  where a non-linearity is applied on the dot product between the weights and the data
+
+	- one relatively popular choice is the Maxout neuron (introduced recently by 
+	  Goodfellow et. al.) that generalizes the ReLU and its leaky version.
+
+	- the Maxout neuron computes the function max(w1x + b1, w2x + b2)
+
+	- notice that both ReLU and Leaky ReLU are a special case of this form, (for example,
+      for ReLU we have w1,b1 = 0)
+
+	- the Maxout neuron enjoys all benefits of a ReLU unit (linear regime of operation,
+	  no saturation) and does not have its drawbacks (dying ReLU)
+
+	- However, unlike the ReLU neurons it doubles the number of parameters for every single
+	  neuron, leading to a high total number of parameters
+
+<TLDR:> - use the ReLU non-linearity
+		- be careful with your learning rates if you do so 
+		- possibly monitor the fraction of "dead" units in the network 
+		- of this concerns oyu, give Leaky ReLU or Maxout a try
+		- never use sigmoid, try tanh but expect it to work worse than ReLU/Maxout
+
+
+Neural Network Architectures:
+
+a. Layer Wise Organization
+
+- most common layer type is the #fully-connected# layer in which neurons between two
+  adjacent layers are fully pairwise connected
+
+- #Naming conventions# input layer is not counted
+
+- therefore, a single-layer neural network describes a network with no hidden layers
+  (input directly mapped to output)
+
+- in that sense, you can sometimes hear people say the logistic regression or SVMs are 
+  simply a special case of single-layer neural networks 
+
+- unlike all layers in a neural network, the output layer neurons most commonnly do not
+  have an activation function
+
+- this is because the last layer is usualy reserved to to represent the class scores 
+   (e.g. classification)
+
+- the two metrics that people commonly use to measure the size of neural networks are the:
+
+	1. number of neurons
+	2. more commonly, the number of params 
+
+	* first network (left) has 4 + 2 = 6 neurons(not counting the inputs), [3x4] + [4x2]
+	  = 20 weights and 4 + 2 = 6 biases, for a total of 26 learnable parameters
+
+- to give some context, modern Convolutional Networks contain on orders of 100 million 
+  parameters and are usualyl made up of approximately 10-20 layer (hence deep learning)
+
+ 
