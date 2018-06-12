@@ -247,6 +247,230 @@ a. Layer Wise Organization
 	  = 20 weights and 4 + 2 = 6 biases, for a total of 26 learnable parameters
 
 - to give some context, modern Convolutional Networks contain on orders of 100 million 
-  parameters and are usualyl made up of approximately 10-20 layer (hence deep learning)
+  parameters and are usuallu made up of approximately 10-20 layers (hence deep learning)
 
- 
+b. Example feed-forward computations
+
+	[py]
+		# forward-pass of a 3-layer neural network:
+		f = lambda x: 1.0/(1.0 + np.exp(-x)) # activation function (use sigmoid)
+		x = np.random.randn(3, 1) # random input vector of three numbers (3x1)
+		h1 = f(np.dot(W1, x) + b1) # calculate first hidden layer activations (4x1)
+		h2 = f(np.dot(W2, h1) + b2) # calculate second hidden layer activations (4x1)
+		out = np.dot(W3, h2) + b3 # output neuron (1x1)
+	[end]
+
+	- the forward pass of a fully-connected layer corresponds to one matrix multiplication
+	  followed by a bias offset and activation function
+
+
+c. Representational Power
+
+	- one way to look at neural networks with FC layers is that they define a family of
+	  functions that are parameterized by the weights of the network 
+
+	- a natural question that arises is: 
+
+	  <What is the representational power of this family of functions?>
+
+	  <In particular, are there functions that cannot be modeled with a Neural Network?>
+
+	- it turns out that neural nets with at least one hidden layer are universal approx.
+
+	- 
+
+d. Setting number of layers and their sizes
+
+	- note that as we increase the size and number of layers in a Neural Network, the
+	  # capacity # of the network increases
+
+	- that is, the space of representable functions grows since the neurons can collaborate
+	  to express many different functions 
+
+	- neural networks with more neurons can express more complicated functions
+
+	- this is both a blessing and a curse however
+
+	- for example, the model with 20 hidden neurons fits all the training data but at the 
+	  cost of segmenting the space into many disjoint red and green decision regions 
+
+	- the model with 3 hidden neurons only has the representational power to classify the
+	  data in broad strokes
+
+	- it models the data as two blobs and inteprets the few red points inside the green
+	  cluster as # outliers (noise) #
+
+	- in practice, this could lead to better # generalization # on the test set 
+
+	- based on our discussion above, it seems that smaller neural networks can be 
+	  preferred if the data is not complex enough to prevent overfitting
+
+	- however, this is incorrect, there are many other preferred ways to prevent overfitting
+      in neural networks that we will discuss later (L2 reg, dropout, input noise)
+
+	- in practice, it is always better to use these methods to control overfitting instead
+	  of the number of neurons
+
+	- the subtle reason behind this is that smaller networks are harder to train with local
+	  methods such as Gradient descent
+
+	- it's clear that their loss functions have relatively few local minima but it turns
+	  out that many of these minima are easier to converge to, but they are bad
+	  (i.e. high loss)
+
+	- conversely, bigger neural nets contains significantly more local minima, but these
+	  minima turn out to be much better in terms of their actual loss
+
+	- since neural nets are non-convex, it's hard to study these properties mathematically
+
+	- but some attempts to understand these objective functions have been made, e.g. in 
+	  a recent paper "The Loss Surfaces of Multilayer Networks"
+
+	- in practice, what you find is that if you train a small network the final loss can 
+	  display a good amount of variance
+
+	- in some cases you get lucky and converge to a good place but in some cases you get 
+	  trapped in one of the bad minima
+
+	- conversely, if you train a large network you'll start to find many different solutions
+	  but the variance in the final achieved loss will be much smaller. In other words, all
+	  solutions are about equally as good and rely less on the luck of random initialization
+
+	- to reiterate, the regularization strength is the preferred way to control the 
+	  overfitting of a neural network
+
+	<TLDR>: The takeaway is that you should not be using smaller networks because you are 
+			afraid of overfitting, instead you should use as big of a neural network as your
+			computational budget allows, and use other regularization techniques to control
+			overfitting			
+
+
+Summary:
+
+1. introduced a very coarse model of a biological neuron 
+2. several types of activation funccs that are used in practice (ReLU) being the most
+   common choice
+3. introduced neural nets where neurons are connected with Fully-Connected Layers
+4. we saw that this layered architecture enables very efficient evaluation of Neural Nets 
+   based on matrix multiplications interwoven with the application of the activation
+   function 
+5. Neural Nets are # universal function approximators # but we also discussed the fact that 
+   this property has little to do with their ubiquitous use. They are used because they make
+   certain "right" assumptions about the functional forms of functions that come up in 
+   practice
+6. Larger networks will always work better than smaller networks, but their higher model 
+   capacity must be appropriately addressed with stronger regularization(such as higher
+   weight decay), or they might overfit.    
+
+   We will see more forms of regularization (especially dropout) in later sections.
+
+
+
+-----------------------------------------------------------
+  Neural Networks Part 2: Setting up the Data and the Loss
+-----------------------------------------------------------
+
+Setting up the data and the model:
+
+
+a. Data Preprocessing
+
+- 3 common forms of data preprocessing a data matrix X (assume size [N x D]):
+
+  1. Mean subtraction
+
+	- most common form of preprocessing 
+
+	- involves subtracting the mean across every individual feature in the data 
+
+	- has the geometric interpretation of centering the cloud of data around the origin 
+	  along every dimension
+
+	[py] 
+		X -= np.mean(X, axis = 0) 
+	[end]
+
+  2. Normalization 
+
+	- refers to normalizing the data dimensions so that hey are of approximately the same 
+  	  scale
+
+	- two common ways of achieving this normalization
+
+		I. Divide each dimension by its standard deviation, once it has been zero-centered:
+
+		   [py] 
+		   		X /= np.std(X, axis=0) 
+		   [end]
+
+		II. Another form of this preprocesssing normalizes each dimension so that the min
+			and max along each dimension is -1 and 1 respectively
+
+	- it only makes sense to apply this preprocessing if you have a reason to 
+			  believe that different input features have different scales
+
+	- in the case of images, the relative scales of pixels are already approx. equal
+	  (and in range from 0 to 255)
+
+
+  3. PCA and Whitening 
+
+	- another form of preprocessing 
+
+	- in this process, the data is first centered as described above
+
+	- then the covariance matrix is computed that tells us about the correlation structure
+  	  in the data
+
+  	 [py]
+  	  # Assume input data matrix X of size [N x D]
+	  X -= np.mean(X, axis = 0) # zero-center the data (important)
+	  cov = np.dot(X.T, X) / X.shape[0] # get the data covariance matrix
+  	 [end]
+
+  	- the (i,j) element of the data covariance matrix maintains the covariance between 
+  	 i-th and j-th dimension of the data 
+
+    - in particular, the diagonal of this matrix contains the variances. 
+
+    - Furthermore, the covariance matrix is symmetric and positive semi-definite
+
+    - etc. etc. didn't complete the notes since PCA/Whitening are not used with ConvNets 
+
+  <Common pitfall>: any preprocessing statistics (e.g. the data mean) must only be computed
+  					on the training data, and then applied to the validation / test data 
+  					
+  					e.g. computing the mean and subtracting it from every image across the 
+  					entire datset and then splitting the data into tran/val/test splits 
+  					would be a mistake. Instead, the mean must be computed only over the 
+  					training data and then subtracted equally from all the splits 
+  					(train/val/test)
+
+
+b. Weight Initialization 
+
+	I. Pitfall: all zero initialization. With proper data normalization, it is reasonable
+	   to assume that approximately half of the weights will be psoitivve and half of them
+	   will be negative.
+
+		- zero might have the expectation to be the "best guss" but this is a mistake, 
+		  because if every neuron in the network computes the same output, then they will 
+		  also all compute the same gradients during backprop and udnergo the exact same 
+		  param updates
+
+		- in other words, there is no source of asymmetry between neurons if their weights 
+		  are initialized to be the same
+
+    II. Small random numbers
+
+		- thus, we still want the weights to be very close to zero, but as we have argued 
+		  above, not identically zero.
+
+		- As a solution, it is common to initialize the weights of the neurons to small 
+		  numbers and refer to doing so as symmetry breaking
+
+		- the idea is that neurons are all random and unique in the beginning so they will 
+		  compute distinct updates and integrate themselves as diverse parts of the full
+		  network
+
+
