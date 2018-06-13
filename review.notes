@@ -473,4 +473,269 @@ b. Weight Initialization
 		  compute distinct updates and integrate themselves as diverse parts of the full
 		  network
 
+		- [py] W = 0.01* np.random.randn(D,H) 
+		  [end]
+
+		- where randn samples from a zero mean, unit standard dev. gaussian. With this
+		  formulation, every neuron's weight vector is initialized as a random vector 
+		  sampled from a multi-dimensional gaussian, so the neurons point in random 
+		  directions in the input space
+
+		- it is also possible to use small numbers drawn from a uniform distribution,
+		  but this seems to have relatively little impact on the final performance in
+		  practice
+
+		- #WARNING#: not necessarily that smaller nums will work strictly better. For 
+		  example, a neural netwok that has very small weight will compute very small 
+		  gradients on its data. this could greatly diminish the "gradient signal" 
+		  flowing backward through a network
+
+	III. Calibrating the variances with 1/sqrt(n)
+
+		- one problem is that the distribution of the outputs from a randomly
+		initialized neuron has a variance that grows with number of inputs
+
+		- we can normalize variance of each neuron's output to 1 by scaling its weight
+		vector by the square root of its fan-in(number of inputs)
+
+		- ensures all neurons in network initially have approximately the same 
+		output distrib and empirically improves rate of convergence
+
+		[py] 
+
+			w = np.random.randn(n) / sqrt(n)
+
+		[end]
+
+	
+	IV. Sparse Initialization
+
+		- another way to solve uncalibrate variances problem
+
+		- set all W matrices to zero
+
+		- but to break symmetry every neuron must be randomly connected 
+		to a fixed num of neurons below it. 
+
+		- typical num of neurons to connect to may be as small as 10
+
+	V. Initializing the biases
+
+		- possible and common to initialize biases to zero
+
+		- since asymmetry breaking is provided by small random nums in the weights
+
+		- for ReLU non-linearities, some like to use a small value like 0.01 for all
+		biases cause this ensures all ReLU units fire at the start and this, 
+		obtain and propagate some gradient
+
+		- but no clear eveidence that this provides consistent improvement
+
+		- more common to simple use 0 bias initialization 
+
+    VI. In practice
+
+    	- curr recommendation is use ReLU units and use 
+    	  [py]
+
+    	  	w = np.random.randn(n) * sqrt(2.0/n)
+
+    	  [end]
+
+  		- this is as discuessed in He et al.
+
+  	VII. Batch Normalization 
+
+  		- alleviates headeaches with properly initializing neural nets 
+
+  		- explicitly forces activations in the network to take on a unit gaussian 
+  		distribustion at the start of training
+
+  		- idea is this is possible cause normalization is a simple differentiable 
+  		operation 
+
+  		- usually insert BatchNorm layer immediately after fully connected layers 
+  		(or convolutional layers) and before non-linearities
+
+  		- networks that use this are significantly more robust to bad initialization 
+
+  		- can be interpreted as doing preprocessing at every layer of the network
+  		but integrated into the network itself in a differentiable manner
+
+c. Regularization 
+
+	I. L2 regularization
+
+		- most common form of reg 
+
+		- can be implemented by penalizing the squared magnitude of all params 
+
+		- that is, for every weight w in the network, we add the 
+		(1/2) * lambda * w^2 to the objective where lambda is reg strength
+
+		- common to see 1/2 in front to cancel the 2 that results from the 
+		differentiation
+
+		- intuitive interpretation of heavily penalizing peaky weight vectors 
+
+		- preferring diffuse weight vectors 
+
+		- desirable property of encouraging network to use all of its inputs a little
+		rather than some of its inputs a lot 
+
+		- notice during grad desc every weight is decayed linearly W += -lambda * W 
+
+	II. L1 regularization 
+
+		- add the term lambda | w | to the objective 
+
+		- possible to combine L1 and L2 regularization called # Elastic net reg #
+
+		- can lead the weight vectors to become sparse during optimization 
+		(unlike L2 which discourages sparsity). L1 DOES NOT encourage sparsity, 
+		it's more that L2 discourages it
+
+		- if not conerned with explicit feature selection, L2 reg can be expected 
+		to give superior performance over L1 
+
+	III. Max norm constraints
+
+		- enforces an absolute upper bound on the magnitude of weight vector for 
+		every neuron
+
+		- uses projected gradient descent to enforce the constraint 
+
+		- this corresponds to performing parameter update as normal, then enforcing
+		the constraint by clamping the weight vector of every neuron to satisfy 
+		||w||2 < c 
+
+		- typical vals of c are on orders of 3 or 4 
+
+		- some people report improvements 
+
+		- appealing property where network cannot explode even when learning rates 
+		are set too high because updates are always bounded
+
+	IV. Dropout 
+
+		- no one uses this anymore, skipped 
+
+	V. Bias regularization
+
+		- not common to regularize bias because they do not interact with data through 
+		multiplicative interactions
+
+		- does not have the interpretation of controlling the influence of a data dimension
+		on the final objective
+
+		- in practical applications, regularizing the bias rarely leads to significantly
+		worse performance 
+
+		- this is likely because there are very few bias terms compared to all the weights
+		so the classifier can "afford to" use the biases if it needs them to obtain a
+		better data loss
+
+	VI. Per-layer regularization
+
+		- not very common to regularize different layers to different amounts
+
+		- relatively few results regarding this idea have been published in the 
+		literature 
+
+	<In practice:> most common to use a single, global L2 regularization strength 
+	that is cross-validated. The value of p = 0.5 is a reasonable default, but this 
+	can be tuned on validation data 
+
+
+d. Loss Functions 
+
+	- regularization loss has been discussed, second part is the data loss which
+	is a supervised learning problem that measures compatibility between a pred 
+	and the ground truth label 
+
+	- data loss takes the form of an average over the data losses for every 
+	individual example. That is, L = (1/N) summation of (Li)
+
+	- where N is the number of training data 
+
+	I. Classification
+
+		- dataset of examples and a single correct label out of a fixed set for 
+		each example 
+
+		- commonly seen cost functions in this setting is the SVM (hinge loss)
+
+		- also, some people report better perform with the squared hinge loss 
+
+		- another common choice is the softmax classifier that uses cross-entropy
+		loss
+
+		# Problem: large number of classes #
+
+			- when set of labels is very large (e.g. words in dictionary, ImageNet
+			which has 22,000 categories) it may be helpful to use *Hierarchical Softmax*
+
+			- this decomposes labels into a tree 
+
+			- each label is represented as a path along the tree 
+
+			- a Softmax classifier is trained at every node of the tree to disambiguate
+			between left and right branches
+
+			- structure of tree strongly impacts performance and is generally problem-
+			dependent
+
+		# Attribute classification
+
+			- both losses above assume there is a single correct answer yi
+
+			- what if yi is a binary vector where every example may or may not 
+			have a certain attribute, and where the attributes are not exclusive?
+
+			- a sensible approach in this case is to build a binary classifier for 
+			every single attribute independently 
+
+			- an alternative to this loss would be to train a logistic regression 
+			classifier for every attribute independently 
+
+	II. Regression 
+
+		- task of predicting real-valued quantities such as the price of houses
+
+		- common to compute the loss between predicted quantity and true answer then,
+		measure the L2 squared norm, or L1 norm of the difference
+
+		# Word of caution: # 
+
+			- important to note that the L2 loss is much harder to optimize than
+			a more stable loss such as Softmax
+
+			- requires a very fragile and specific property from the network to  
+			output exactly one correct value for each input
+
+			- not the case with Softmax, where the precise value of each score is less
+			important
+
+			- only matters that their magnitudes are appropriate
+
+			- L2 loss is less robust because outliers can introduce huge gradients
+
+			- when faced with a regression problem, *consider if absolutely necessary*
+
+			- instead, have a strong preference to discretizing outputs to bins and 
+			perform classification over them whenver possible
+
+			e.g. predicting star rating, it might be better to use 5 independent 
+			classifiers for ratings of 1-5 stars instead of regression 
+
+			- classification has the additional benefit that it can give you a distrib 
+			over the regression outputs, not just a single output with no indication 
+			of its confidence
+
+			- if certain that classification is not appropriate, use L2 but be careful.
+
+			- for example, L2 is more fragile and applying dropout in the network 
+			is not a great idea
+
+
 
