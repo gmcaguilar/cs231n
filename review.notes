@@ -739,3 +739,462 @@ d. Loss Functions
 
 
 
+---------------------------------------------------
+  Neural Networks Part 3: Learning and Evaluation
+---------------------------------------------------
+
+
+Babysitting the learning process:
+
+  IV. Activation/Gradient distributions per layer
+
+    - wrong initialization can slow down or stop the learning process
+    
+    - issue can be diagnosed easily
+
+    - one way is plot activation/gradient histograms for all layers of the
+      network
+
+    - not a good sign to see any strange distributions
+
+	e.g. w/ tanh neurons, 
+
+	* expected to see distribution of neuron activations
+	between full range of [-1,1]
+
+	* instead of seeing all neurons outputting zero, or all neurons being 
+	completely saturated at either -1 or 1
+
+  V. First-layer Visualizations
+
+    - when working with image pixels
+
+    - helpful and satisfying to plot first-layer features visually
+
+    - noisy features could be a symptom: 
+
+	* unconverged network 
+
+	* improperly set learning rate
+
+	* very low weight regularization penalty
+
+    - nice, smooth, clean and diverse features are good indications that training
+      is doing well
+
+
+Parameter Updates:
+
+  I. SGD and bells and whistles
+
+    a. Vanilla update 
+
+       - simplest form of update which changes parameters along 
+      	 negative gradient direction
+
+       - x += - learning_rate * dx
+
+       
+
+    b. Momentum update 
+
+	     - motivated from a physical perspective of the optimization problem
+
+	     - loss can be interpreted as height of hilly terrain
+
+       - initializing params with rand numbers is like setting a particle w/ 0 initial 
+       velocity at some location
+
+       - optimization process can then be seen as equivalent to process of simulating the 
+       parameter vector as rolling on the landscape
+
+
+  II. Annealing the learning rate
+
+    - w/ high learning rate the system contains too much kinetic energy & the parameter 
+    vector bounces around chaotically, unable to settle down into deeper but narrower
+    parts of the loss function
+
+    - knowing when to decay learning rate can be tricky
+
+    - decay it slowly, will waste computation bouncing around chaotically w/ little
+    improvement for a long time
+
+    - decay it aggressively, system will cool too quickly,unable to reach best position it
+    can 
+
+    - 3 common types of implementing learning rate decay:
+
+      a. Step decay
+
+        - reduce lr by some factor every few epochs
+
+        - typical values: reducing lr by a half every 5 epochs or by 0.1 every 20 epochs
+
+        - these numbers depend heavily on type of problem and the model
+
+        - <heuristic>: watch validation error while training w/ fixed lr, reduce lr by 
+        a constant (0.5) whenever validation error stops improving
+
+      b. Exponential decay 
+
+        - has mathematical form a = a0 * e^-kt, where a0,k are hyperparams and t is iteration
+        number
+
+
+      c. 1/t decay
+
+        - has mathematical form a = a0 / (1 + kt) where a0,k are hyperparams and t 
+        is iteration number 
+
+    - <heuristic>: in practice, step decay is slightly preferable because the hyperparams
+    it involves are more interpretable than hyperparameter k 
+
+    - <heuristic>: if can afford computational budget, err on the side of slower decay
+    and train for longer time
+
+
+  III. Second order methods
+
+    - based on Newton's method 
+
+    - iterates the following update: x <- x - [Hf(x)]^-1 ∇(f(x))
+
+    - Hf(x) is the hessian matrix: square matrix of 2nd-order partial derivatives of the 
+    function 
+
+    - term ∇(f(x)) is the gradient vector, as seen in gradient descent
+
+    - Hessian describes local curvature of loss function, which allows a more efficient 
+    update 
+
+    - multiplying by inverse Hessian leads optimization to take aggressive steps in 
+    directions of shallow curvature and shorter steps in directions of steep curvature
+
+    - note absence of any lr hyperparameters in the update formula, which proponents of 
+    these methods cite as a large advantage over first-order methods
+
+    - however, the update above is impractical for most deep learning applications because
+    computing and inverting Hessian in its explicit form is very costly in both space & time
+
+    - for instance, a NN w/ one million params would have a Hessian matrix of size 
+    [1,000,000 x 1,000,000], occupying approx. 3725 GB of RAM
+
+    - thus, large variety of quasi-Newton methods have been developed that seek to approx
+    inverse Hessian 
+
+    - most popular is L-BFGS which uses the information in gradients over time to form 
+    approximation implicitly  (i.e. full matrix is never computed)
+
+    - however, even after eliminate memory concerns, a large downside of a naive application
+     of L-BFGS is that it must be computed over entire training set which could contain 
+     millions of examples
+
+    - unlike mini-batch SGD, getting L-BFGS to work on mini-batches is more tricky and an 
+    active area of research
+
+    - <In practice>: not common to see L-BFGS or similar second-order methods applied to 
+    large-scale Deep Learning and ConvNets. Instead, SGD variants based on Nesterov's 
+    momentum are more standard because they are simpler and scale more easily.
+
+
+  IV. Per-parameter adaptive lr methods
+
+    - all previous approaches manipulated lr globally and equally for all params 
+
+    - tuning lr is an expensive process, so much work has gone into devising methods that
+    can adaptively tune the lr and even do so per parameter
+
+
+    I. Adagrad
+  
+      - an adaptive lr method originally proposed by Duchi et. al.
+
+      [py]
+        #Assume the gradient dx and parameter vector x
+        cache += dx ** 2
+        x += - learning_rate * dx / (np.sqrt(cache) + eps)
+
+      [end] 
+
+      - "cache" has size equal to the size of the gradient, keeps track of per-parameter 
+      sum of squared gradients
+
+      - then used to normalize the parameter update step, element-wise
+
+      - weights that receive high gradients will have their effective lr reduced
+
+      - weights that receive small or infrequent updates will have their effective lr 
+      increased
+
+      - amusingly, the sqr root operation turns out to be very important & without it 
+      the algorithm performs much worse 
+
+      - smoothing term "eps" avoids division by zero 
+
+      - eps usually set somewhere from 1e-4 to 1e-8
+
+      - downside of Adagrad is that in Deep Learning, monotonic learning rate usually 
+      proves too aggressive and stops learning too early 
+
+
+    II. RMSprop 
+
+      - very effective but currently unpublished adaptive lr method
+
+      - everyone who uses this citse slide 29 of lecture 6 of Geoff Hinton's Coursera 
+      class
+
+      - In particular, uses a moving average of squared gradients instead, giving: 
+
+      [py]
+
+        cache = decay_rate * cache + (1 - decay_rate) * dx**2
+        x += - learning_rate * dx / (np.sqrt(cache) + eps)
+
+      [end]
+
+    - "decay_rate" is a hyperparam and typical values are [0.9,0.99,0.999]
+
+    - notice that "X+=" update is identical to Adagrad but the "cache" variable is a leaky
+
+    - hence, RMSProp still modulates the lr of each weight based on the magnitudes of its 
+    gradients, which has a beneficial equalizing effect 
+
+    - unlike Adagrad, the updates do not get monotonically smaller 
+
+
+    III. Adam
+
+      - recently proposed update 
+
+      - looks a bit lke RMSProp with momentum 
+
+      - the (simplified) update looks as follows:
+
+      [py]
+
+        m = beta1*m + (1-beta1) * dx
+        v = beta2*v + (1-beta2) * (dx**2)
+        X += - learning_rate * m / (np.sqrt(v) + eps)
+
+      [end]
+
+      - notice that update looks exactly as RMSProp update, except the "smooth" version
+      of the gradient "m" is used instead of the raw gradient vector dx
+
+      - recommended values in the paper are eps = 1e-8, beta1 = 0.9, beta2 = 0.999
+
+      - <In practice>: Adam is currently recommended as default algorithm to use and often
+      works slightly better than RMSprop. However, worth trying SGD + Nesterov Momentum as 
+      an alternative
+
+      - full Adam update also includes a bias correction mechanism, which compensates for
+      the fact that in the first few time steps the vectors m,v are both initialized and 
+      therefore biased at zero, before they fully "warm up"
+
+      - with bias correction mechanism, update looks as follows:
+
+      [py]
+        # t is your iteration counter going from 1 to infinity
+        m = beta1*m + (1-beta1)*dx
+        mt = m / (1-beta1**t)
+        v = beta2*v + (1-beta2)*(dx**2)
+        vt = v / (1-beta2**t)
+        x += - learning_rate * mt / (np.sqrt(vt) + eps)
+      [end]
+
+      - update is now a function of the iteration as well as other params 
+
+
+Hyperparameter optimization:
+
+  - training Neural Nets can involve many hyperparam settings 
+
+  - most common hyperparams in context of Neural Nets include:
+
+    a. initial lr
+    b. lr decay schedule (such as the decay constant) 
+    c. reg strength (L2 penalty, dropout strength)
+
+  I. Implementation 
+
+    - larger neural nets typically require a long time to train 
+
+    - performing hyperparam search can take many days/weeks
+
+    - important to keep in mind since it influences the design of your code base 
+
+    - a particular design is to have a # worker # that continuously samples random 
+    hyperparams and performs optimization
+
+    - during training, worker will keep track of validation performance after every epoch 
+    and writes a model checkpoint to a file (preferably on a shared file system)
+
+    - useful to include validation performance directly in the file name 
+
+    - then a second program called # master # which launches or kills workers across a 
+    computing cluster, and may inspect checkpoints written by workers and plot their  
+    training statistics, etc.
+
+
+  II. Prefer one validation fold to cross-validation
+
+    - most cases, a single validation set
+    of respectable size substantially simplifies the code base without need for 
+    cross-validation
+
+    - people will say they "cross-validated" a param, but many times it's assumed that
+    they only used a single validation set
+
+
+  III. Hyperparameter ranges
+
+    - search for hyperparams on log scale 
+
+    - for example, a typical sampling of lr would look as follows:
+
+      [py]
+        learning_rate = 10 ** uniform(-6, 1)
+      [end]
+
+    - that is, we are generating a random num from a uniform distrib, but then raising
+    it to the power of 10 
+
+    - same strategy should be used for regularization strength
+
+    - intuitively, because lr and reg strength have multiplicative effects on training 
+    dynamics 
+
+    - for example, fixed change of adding 0.01 to a lr has huge effects on dynamics if 
+    lr is 0.001, but nearly no effect if lr is 10
+
+    - this is cause the lr multiplies the computed grad in the update 
+
+    - therefore much more natural to consider range of lr multiplied or divided by some 
+    value, than a range of lr added or subtracted to by some value 
+
+
+  IV. Prefer random search to grid search 
+
+    - as argued by Bergstra and Benigio,
+
+    - "randomly chosen trials are more efficient for hyper-parameter optimization than
+    trials on a grid" 
+
+    - as it turnsout, this also usually easier to implement 
+
+
+  V. Careful with best values on border
+
+    - sometimes it can happen you're searching for a hyperparam in a bad range 
+
+    - for instance, suppose 
+
+      [py]
+        learning_rate = 10 ** uniform (-6, 1)
+      [end]
+
+    - once we receive results, important to double check that final lr is not at edge of
+    this interval, otherwise may be missing more optimal hperparam setting beyond 
+    the interval 
+
+
+  VI. Stage your search from coarse to fine 
+
+    - can be helpful to first search in coarse ranges
+
+    - e.g. 10 ** [-6,1]
+
+    - then depending on where best results are turning up, narrow the range 
+
+    - can be helpful to perform initial coarse search while only training for 1 epoch 
+    or even less, cause many hyperparam settings can lead the model to not learn at all 
+    or immediately explode with infinite cost 
+
+    - second stage could then perform a narrower search with 5 epochs 
+
+    - last stage could perform a detailed search in final range for many more epochs 
+
+  VII. Bayesian Hyperparameter Optimization 
+
+    - whole area of research devoted to coming up with algorithms that try to more 
+    efficiently navigate space of hyperparams 
+
+    - core idea is to appropriately balance exploration (exploitation trade-off when 
+      querying the performance at different hyperparams)
+
+    - many librarise have been developed based on this: Spearmintm, SMAC, Hyperopt
+
+    - <In practice>: w/ ConvNets it is still relatively difficult to beat rand 
+    search in a carefully-chosen interval  
+
+
+Evaluation:
+
+  I. Model Ensembles 
+
+    - reliable approach to improving neural net performance by a few percent is to train 
+    multiple independent models 
+
+    - then average predictions at test time 
+
+    - as number of models in the ensemble increases, performance typically monotonically
+    improves (though with diminishing returns)
+
+    - improvements are more dramatic w/ higher model variety in the ensemble 
+
+    - few approaches to forming an ensemble:
+
+      a. Same model, different initializations
+
+        - use cross-validation to determine best hyperparams
+
+        - train multiple models w/ best set of hyperparams but w/ different random 
+        initialization
+
+        - danger with this approach is the variety is only due to initialization 
+
+      b. Top models discovered during cross-validation
+
+        - use cross-validation to determine best hyperparams
+
+        -pick the top few models to form the ensemble 
+
+        - improves variety of ensemble but has the danger of including suboptimal models 
+
+        - <in practice>: can be easier to perform since doesn't require additional 
+        retraining of models after cross-validation
+
+      c. Different checkpoints of a single model 
+
+        - if training is very expensive, people have had limited succes in taking different
+        checkpoints of a single network over time (for example after every epoch) & using
+        those to form an ensemble 
+
+        - clearly suffers from lack of variety, but can still work reasonably well in 
+        practice
+
+        - advantage of this approach is that it is very cheap 
+
+      d. Running average of params during training 
+
+        - cheap way of almost always getting extra percent or two of performance
+        
+        - maintain second copy of network's weights in memory that maintains an exponentially
+        decaying sum of previous weights during training 
+
+        - this way you're averaging state of the network over last several iterations 
+
+        - will find that this "smoothed" version of the weights over last few steps almost
+        always achieves better validation error
+
+        - rough intuition is that the objective is bowl-shaped and your network is jumping
+        around the mode, so average has a higher chance of being somewhere nearer the mode
+
+    - one disadvantage of model ensembles is that they take longer to evaluate on test 
+    example
+
+    - may find recent work from Geoff Hinton on "Dark Knowledge" inspiring, where idea is to 
+    "distill" a good ensemble back to a single model by incorporating the ensemble log 
+    likelihoods into a modified objective
